@@ -24,4 +24,37 @@ class Transaction extends Model
     {
         return $this->morphTo();
     }
+
+    public function deposits()
+    {
+        return $this->hasMany(Deposit::class);
+    }
+    public function withdraws()
+    {
+        return $this->hasMany(Withdraw::class);
+    }
+    public function transfers()
+    {
+        return $this->hasMany(Transfer::class);
+    }
+
+    public function toList()
+    {
+        $result = [
+            'id' => $this->id,
+            'type' => $this->type,
+            'created_at' => $this->created_at,
+        ];
+        if ($this->type === 'deposit') {
+            $result['amount'] = $this->deposits->first()->amount;
+        }
+        if ($this->type === 'withdraw') {
+            $result['amount'] = $this->withdraws->first()->amount;
+        }
+        if ($this->type === 'transfer') {
+            $result['amount'] = $this->transfers->first()->amount;
+            $result['recipient'] = $this->transfers->first()->recipient->name;
+        }
+        return $result;
+    }
 }

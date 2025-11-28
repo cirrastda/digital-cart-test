@@ -15,20 +15,6 @@ class UserController extends Controller
         $this->userService = $userService;
     }
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        try {
-            $users = \App\Models\User::all();
-            return response()->json($users);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao buscar usuários: ' . $e->getMessage()
-            ], 500);
-        }
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -42,9 +28,12 @@ class UserController extends Controller
                 $request->password
             );
 
+            $token = $this->userService->createToken($user);
+
             return response()->json([
                 'message' => 'Usuário criado com sucesso',
                 'user' => $user,
+                'token' => $token,
             ], 201);
 
         } catch (\Exception $e) {
@@ -58,11 +47,15 @@ class UserController extends Controller
     public function get_balance()
     {
         try {
-            $authUser = auth()->user();
+            $authUser = $this->userService->getAuthUser();
 
             return response()->json([
                 'balance' => $authUser->balance,
             ]);
+        } catch (\BadMethodCallException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 401);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Erro ao buscar saldo do usuário: ' . $e->getMessage()

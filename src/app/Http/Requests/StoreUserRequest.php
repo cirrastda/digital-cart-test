@@ -23,6 +23,9 @@ class StoreUserRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'name.required' => 'Informe o nome.',
+            'email.required' => 'Informe o email.',
+            'email.email' => 'O email deve ser válido.',
             'email.unique' => 'Este email já está cadastrado.',
         ];
     }
