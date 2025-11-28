@@ -1,21 +1,5 @@
 version: "3.8"
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: digital-cart-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: digital_cart
-      MYSQL_USER: digital
-      MYSQL_PASSWORD: digitalcart
-    ports:
-      - "3308:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-    restart: unless-stopped
-    networks:
-      - digital-network
-
   app:
     build:
       context: ./.docker/php
@@ -27,8 +11,6 @@ services:
     environment:
       COMPOSER_ALLOW_SUPERUSER: 1
     restart: unless-stopped
-    depends_on:
-      - mysql
     networks:
       - digital-network      
 
@@ -47,8 +29,6 @@ services:
     restart: unless-stopped
     networks:
       - digital-network      
-volumes:
-  mysql-data:
 networks: 
   digital-network:
     driver: bridge

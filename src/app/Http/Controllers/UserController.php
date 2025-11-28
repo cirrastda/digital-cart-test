@@ -45,7 +45,6 @@ class UserController extends Controller
             return response()->json([
                 'message' => 'Usuário criado com sucesso',
                 'user' => $user,
-                'token' => $user->token,
             ], 201);
 
         } catch (\Exception $e) {
