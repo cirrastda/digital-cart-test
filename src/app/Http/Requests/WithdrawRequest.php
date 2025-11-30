@@ -1,15 +1,13 @@
 <?php
 
 namespace App\Http\Requests;
-
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 use App\Models\Transaction;
 use App\Services\TransactionService;
 
 
 
-class WithdrawRequest extends FormRequest
+class WithdrawRequest extends BaseApiRequest
 {
     public function authorize(): bool
     {

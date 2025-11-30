@@ -29,6 +29,7 @@
   "paths": {
     "/users": {
       "post": {
+        "security": [],
         "tags": ["Usuários"],
         "summary": "Criar usuário",
         "requestBody": {
@@ -49,13 +50,64 @@
         },
         "responses": {
           "201": {
-            "description": "Usuário criado"
+            "description": "Usuário criado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "code": { "type": "integer", "example": 201 },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": { "type": "object" },
+                        "token": { "type": "string" }
+                      }
+                    },
+                    "error": { "nullable": true }
+                  }
+                }
+              }
+            }
           },
           "422": {
-            "description": "Erro de validação"
+            "description": "Erro de validação",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "code": { "type": "integer", "example": 422 },
+                    "data": { "type": "object", "nullable": true },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": { "type": "string", "example": "Erro de validação" },
+                        "errors": { "type": "object" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
-            "description": "Erro interno"
+            "description": "Erro interno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "code": { "type": "integer", "example": 500 },
+                    "data": { "type": "object", "nullable": true },
+                    "error": { "type": "string", "example": "Erro ao criar usuário" }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -72,7 +124,15 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "balance": { "type": "number", "format": "float" }
+                    "success": { "type": "boolean", "example": true },
+                    "code": { "type": "integer", "example": 200 },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "balance": { "type": "number", "format": "float" }
+                      }
+                    },
+                    "error": { "type": "object", "nullable": true }
                   }
                 }
               }
@@ -102,10 +162,54 @@
           }
         },
         "responses": {
-          "200": { "description": "Depósito realizado" },
-          "422": { "description": "Erro de validação" },
-          "401": { "description": "Não autenticado" },
-          "500": { "description": "Erro interno" }
+          "200": {
+            "description": "Depósito realizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "code": { "type": "integer", "example": 200 },
+                    "data": { "type": "object", "properties": { "message": { "type": "string" } } },
+                    "error": { "type": "object", "nullable": true }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erro de validação",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "code": { "type": "integer", "example": 422 },
+                    "data": { "type": "object", "nullable": true },
+                    "error": { "type": "object", "properties": { "message": { "type": "string" }, "errors": { "type": "object" } } }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "success": { "type": "boolean", "example": false }, "code": { "type": "integer", "example": 401 }, "data": { "type": "object", "nullable": true }, "error": { "type": "string" } } }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "success": { "type": "boolean", "example": false }, "code": { "type": "integer", "example": 500 }, "data": { "type": "object", "nullable": true }, "error": { "type": "string" } } }
+              }
+            }
+          }
         }
       }
     },
@@ -128,10 +232,22 @@
           }
         },
         "responses": {
-          "200": { "description": "Saque realizado" },
-          "422": { "description": "Erro de validação" },
-          "401": { "description": "Não autenticado" },
-          "500": { "description": "Erro interno" }
+          "200": {
+            "description": "Saque realizado",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean", "example": true }, "code": { "type": "integer", "example": 200 }, "data": { "type": "object", "properties": { "message": { "type": "string" } } }, "error": { "type": "object", "nullable": true } } } } }
+          },
+          "422": {
+            "description": "Erro de validação",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean", "example": false }, "code": { "type": "integer", "example": 422 }, "data": { "type": "object", "nullable": true }, "error": { "type": "object", "properties": { "message": { "type": "string" }, "errors": { "type": "object" } } } } } } }
+          },
+          "401": {
+            "description": "Não autenticado",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean", "example": false }, "code": { "type": "integer", "example": 401 }, "data": { "type": "object", "nullable": true }, "error": { "type": "string" } } } } }
+          },
+          "500": {
+            "description": "Erro interno",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean", "example": false }, "code": { "type": "integer", "example": 500 }, "data": { "type": "object", "nullable": true }, "error": { "type": "string" } } } } }
+          }
         }
       }
     },
@@ -155,10 +271,10 @@
           }
         },
         "responses": {
-          "200": { "description": "Transferência realizada" },
-          "422": { "description": "Erro de validação" },
-          "401": { "description": "Não autenticado" },
-          "500": { "description": "Erro interno" }
+          "200": { "description": "Transferência realizada", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean", "example": true }, "code": { "type": "integer", "example": 200 }, "data": { "type": "object", "properties": { "message": { "type": "string" } } }, "error": { "type": "object", "nullable": true } } } } } },
+          "422": { "description": "Erro de validação", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean", "example": false }, "code": { "type": "integer", "example": 422 }, "data": { "type": "object", "nullable": true }, "error": { "type": "object", "properties": { "message": { "type": "string" }, "errors": { "type": "object" } } } } } } } },
+          "401": { "description": "Não autenticado", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean", "example": false }, "code": { "type": "integer", "example": 401 }, "data": { "type": "object", "nullable": true }, "error": { "type": "string" } } } } } },
+          "500": { "description": "Erro interno", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean", "example": false }, "code": { "type": "integer", "example": 500 }, "data": { "type": "object", "nullable": true }, "error": { "type": "string" } } } } } }
         }
       }
     },
@@ -174,20 +290,28 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "transactions": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": { "type": "integer" },
-                          "type": { "type": "string" },
-                          "created_at": { "type": "string", "format": "date-time" },
-                          "amount": { "type": "number", "format": "float" },
-                          "recipient": { "type": "string", "nullable": true },
-                          "sender": { "type": "string", "nullable": true }
+                    "success": { "type": "boolean", "example": true },
+                    "code": { "type": "integer", "example": 200 },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transactions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "integer" },
+                              "type": { "type": "string" },
+                              "created_at": { "type": "string", "format": "date-time" },
+                              "amount": { "type": "number", "format": "float" },
+                              "recipient": { "type": "string", "nullable": true },
+                              "sender": { "type": "string", "nullable": true }
+                            }
+                          }
                         }
                       }
-                    }
+                    },
+                    "error": { "type": "object", "nullable": true }
                   }
                 }
               }

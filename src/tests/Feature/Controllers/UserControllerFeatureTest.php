@@ -21,7 +21,17 @@ class UserControllerFeatureTest extends TestCase
 
         $resp = $this->postJson('/users', $payload);
         $resp->assertStatus(201);
-        $resp->assertJsonStructure(['message', 'user' => ['id', 'name', 'email'], 'token']);
+        $resp->assertJson([
+            'success' => true,
+            'code' => 201,
+        ]);
+        $resp->assertJsonStructure([
+            'success', 'code', 'data' => [
+                'user' => ['id', 'name', 'email'],
+                'token'
+            ],
+            'error'
+        ]);
     }
 
     public function test_register_user_duplicate_email_returns_422(): void
@@ -36,7 +46,11 @@ class UserControllerFeatureTest extends TestCase
 
         $resp = $this->postJson('/users', $payload);
         $resp->assertStatus(422);
-        $resp->assertJsonValidationErrors(['email']);
+        $resp->assertJson([
+            'success' => false,
+            'code' => 422,
+        ]);
+        $this->assertNotEmpty($resp->json('error.errors.email'));
     }
 
     public function test_get_balance_success_returns_value(): void
@@ -46,13 +60,21 @@ class UserControllerFeatureTest extends TestCase
 
         $resp = $this->getJson('/users/balance');
         $resp->assertStatus(200);
-        $resp->assertJson(['balance' => '123.45']);
+        $resp->assertJson([
+            'success' => true,
+            'code' => 200,
+        ]);
+        $this->assertSame('123.45', $resp->json('data.balance'));
     }
 
     public function test_get_balance_unauthenticated_returns_error(): void
     {
         $resp = $this->getJson('/users/balance');
         $resp->assertStatus(401);
-        $this->assertSame('Unauthenticated.', $resp->json('message'));
+        $resp->assertJson([
+            'success' => false,
+            'code' => 401,
+        ]);
+        $this->assertSame('Não autenticado', $resp->json('error'));
     }
 }

@@ -33,6 +33,11 @@ IMPORTANTE:
 
 A API estará disponível em: `http://localhost:8080/`
 
+#### Formato de Resposta
+- Todas as respostas seguem o envelope: `{ success: boolean, data: any | null, error: string | object | null, code: number }`.
+- Exemplo de sucesso: `{ "success": true, "data": { ... }, "error": null, "code": 200 }`.
+- Exemplo de erro de validação: `{ "success": false, "data": null, "error": { "message": "Erro de validação", "errors": { "amount": ["Limite diário excedido"] } }, "code": 422 }`.
+
 #### Autenticação
 - Exceto `POST /users`, todos os endpoints exigem autenticação via Sanctum.
 - Envie o cabeçalho `Authorization: Bearer <token>`.
@@ -42,7 +47,7 @@ A API estará disponível em: `http://localhost:8080/`
 - `POST /users` — Criar usuário
   - Não requer autenticação
   - Corpo (`application/json`): `{ "name": "Seu Nome", "email": "email@exemplo.com", "password": "senha12345" }`
-  - Respostas: `201` sucesso (retorna `user` e `token`), `422` validação, `500` erro interno
+  - Respostas: `201` `{ "success": true, "code": 201, "data": { "user": { ... }, "token": "..." }, "error": null }`, `422` validação, `500` erro interno
   - Regras de negócio:
     - `name`: obrigatório, texto, máx. 255
     - `email`: obrigatório, formato válido, único
@@ -50,13 +55,13 @@ A API estará disponível em: `http://localhost:8080/`
 
 - `GET /users/balance` — Consultar saldo atual
   - Cabeçalho: `Authorization: Bearer <token>`
-  - Respostas: `200` `{ "balance": 0.00 }`, `401` não autenticado, `500` erro interno
+  - Respostas: `200` `{ "success": true, "code": 200, "data": { "balance": 0.00 }, "error": null }`, `401` não autenticado, `500` erro interno
 
 #### Transações
 - `POST /deposit` — Depositar
   - Cabeçalho: `Authorization: Bearer <token>`
   - Corpo: `{ "amount": 100.00 }`
-  - Respostas: `200` sucesso, `422` validação, `401` não autenticado, `500` erro interno
+  - Respostas: `200` `{ "success": true, "code": 200, "data": { "message": "Depósito realizado com sucesso!" }, "error": null }`, `422` validação, `401` não autenticado, `500` erro interno
   - Regras de negócio:
     - `amount`: obrigatório, numérico, mínimo `0.01`
     - Limite diário de depósito: `1000.00` (valor da requisição não pode exceder, nem a soma do dia)
@@ -64,7 +69,7 @@ A API estará disponível em: `http://localhost:8080/`
 - `POST /withdraw` — Sacar
   - Cabeçalho: `Authorization: Bearer <token>`
   - Corpo: `{ "amount": 50.00 }`
-  - Respostas: `200` sucesso, `422` validação, `401` não autenticado, `500` erro interno
+  - Respostas: `200` `{ "success": true, "code": 200, "data": { "message": "Saque realizado com sucesso!" }, "error": null }`, `422` validação, `401` não autenticado, `500` erro interno
   - Regras de negócio:
     - `amount`: obrigatório, numérico, mínimo `0.01`
     - Saldo insuficiente: não permite sacar acima do saldo
@@ -73,7 +78,7 @@ A API estará disponível em: `http://localhost:8080/`
 - `POST /transfer` — Transferir para outro usuário
   - Cabeçalho: `Authorization: Bearer <token>`
   - Corpo: `{ "amount": 25.00, "recipient": "destinatario@exemplo.com" }`
-  - Respostas: `200` sucesso, `422` validação, `401` não autenticado, `500` erro interno
+  - Respostas: `200` `{ "success": true, "code": 200, "data": { "message": "Transferência realizada com sucesso!" }, "error": null }`, `422` validação, `401` não autenticado, `500` erro interno
   - Regras de negócio:
     - `amount`: obrigatório, numérico, mínimo `0.01`
     - `recipient`: obrigatório, e-mail existente na base (`exists:users,email`)
@@ -81,7 +86,7 @@ A API estará disponível em: `http://localhost:8080/`
 
 - `GET /history` — Histórico de transações
   - Cabeçalho: `Authorization: Bearer <token>`
-  - Respostas: `200` `{ "transactions": [ { "id": 1, "type": "deposit", "created_at": "2025-11-28T00:00:00Z", "amount": 10.00, "recipient": null, "sender": null }, ... ] }`, `401`, `500`
+  - Respostas: `200` `{ "success": true, "code": 200, "data": { "transactions": [ { "id": 1, "type": "deposit", "created_at": "2025-11-28T00:00:00Z", "amount": 10.00, "recipient": null, "sender": null }, ... ] } , "error": null }`, `401`, `500`
   - Observações:
     - `type` pode ser: `deposit`, `withdraw`, `transfer`, `transfer-received`
     - `recipient` é preenchido para transferências enviadas; `sender` para transferências recebidas.

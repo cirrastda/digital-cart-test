@@ -23,7 +23,8 @@ class TransactionControllerErrorServiceTest extends TestCase
 
         $resp = $this->postJson('/deposit', ['amount' => 25]);
         $resp->assertStatus(500);
-        $resp->assertJson(['message' => 'Erro ao realizar depósito: Falha no serviço']);
+        $resp->assertJson(['success' => false, 'code' => 500]);
+        $this->assertStringContainsString('Erro ao realizar depósito: Falha no serviço', (string) $resp->json('error'));
     }
 
     public function test_withdraw_service_error_returns_500(): void
@@ -37,7 +38,8 @@ class TransactionControllerErrorServiceTest extends TestCase
 
         $resp = $this->postJson('/withdraw', ['amount' => 40]);
         $resp->assertStatus(500);
-        $resp->assertJson(['message' => 'Erro ao realizar saque: Falha no serviço']);
+        $resp->assertJson(['success' => false, 'code' => 500]);
+        $this->assertStringContainsString('Erro ao realizar saque: Falha no serviço', (string) $resp->json('error'));
     }
 
     public function test_transfer_service_error_returns_500(): void
@@ -51,6 +53,7 @@ class TransactionControllerErrorServiceTest extends TestCase
 
         $resp = $this->postJson('/transfer', ['amount' => 30, 'recipient' => $recipient->email]);
         $resp->assertStatus(500);
-        $resp->assertJson(['message' => 'Erro ao realizar transferência: Falha no serviço']);
-    }
+        $resp->assertJson(['success' => false, 'code' => 500]);
+        $this->assertStringContainsString('Erro ao realizar transferência: Falha no serviço', (string) $resp->json('error'));
+}
 }

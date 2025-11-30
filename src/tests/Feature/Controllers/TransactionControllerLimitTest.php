@@ -22,7 +22,7 @@ class TransactionControllerLimitTest extends TestCase
 
         $resp->assertStatus(422);
         $json = $resp->json();
-        $this->assertSame('Limite diário de depósito excedido.', $json['errors']['amount'][0] ?? null);
+        $this->assertSame('Limite diário de depósito excedido.', $json['error']['errors']['amount'][0] ?? null);
     }
 
     public function test_withdraw_exceeds_daily_limit_returns_422(): void
@@ -35,6 +35,6 @@ class TransactionControllerLimitTest extends TestCase
 
         $resp->assertStatus(422);
         $json = $resp->json();
-        $this->assertSame('Limite diário de saque excedido.', $json['errors']['amount'][0] ?? null);
-    }
+        $this->assertSame('Limite diário de saque excedido.', $json['error']['errors']['amount'][0] ?? null);
+}
 }

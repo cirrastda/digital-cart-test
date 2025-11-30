@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUserRequest;
 use App\Services\UserService;
+use App\Http\Responses\ApiResponse;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -36,9 +37,52 @@ class UserController extends Controller
      *       )
      *     }
      *   ),
-     *   @OA\Response(response=201, description="Usuário criado"),
-     *   @OA\Response(response=422, description="Erro de validação"),
-     *   @OA\Response(response=500, description="Erro interno")
+     *   @OA\Response(
+     *     response=201,
+     *     description="Usuário criado",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="code", type="integer", example=201),
+     *         @OA\Property(
+     *           property="data",
+     *           type="object",
+     *           @OA\Property(property="user", type="object"),
+     *           @OA\Property(property="token", type="string")
+     *         ),
+     *         @OA\Property(property="error", nullable=true)
+     *       )
+     *     }
+     *   ),
+     *   @OA\Response(
+     *     response=422,
+     *     description="Erro de validação",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=false),
+     *         @OA\Property(property="code", type="integer", example=422),
+     *         @OA\Property(property="data", type="object", nullable=true),
+     *         @OA\Property(
+     *           property="error",
+     *           type="object",
+     *           @OA\Property(property="message", type="string", example="Erro de validação"),
+     *           @OA\Property(property="errors", type="object")
+     *         )
+     *       )
+     *     }
+     *   ),
+     *   @OA\Response(
+     *     response=500,
+     *     description="Erro interno",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=false),
+     *         @OA\Property(property="code", type="integer", example=500),
+     *         @OA\Property(property="data", type="object", nullable=true),
+     *         @OA\Property(property="error", type="string", example="Erro ao criar usuário")
+     *       )
+     *     }
+     *   )
      * )
      */
     public function store(StoreUserRequest $request)
@@ -52,16 +96,13 @@ class UserController extends Controller
 
             $token = $this->userService->createToken($user);
 
-            return response()->json([
-                'message' => 'Usuário criado com sucesso',
+            return ApiResponse::success([
                 'user' => $user,
                 'token' => $token,
             ], 201);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 500);
+            return ApiResponse::error('Erro ao criar usuário: '.$e->getMessage().' ('.get_class($e).')', 500);
         }
     }
     /**
@@ -79,7 +120,14 @@ class UserController extends Controller
      *     description="Saldo atual",
      *     content={
      *       "application/json"=@OA\JsonContent(
-     *         @OA\Property(property="balance", type="number", format="float")
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="code", type="integer", example=200),
+     *         @OA\Property(
+     *           property="data",
+     *           type="object",
+     *           @OA\Property(property="balance", type="number", format="float")
+     *         ),
+     *         @OA\Property(property="error", type="object", nullable=true)
      *       )
      *     }
      *   ),
@@ -91,18 +139,13 @@ class UserController extends Controller
     {
         try {
             $authUser = $this->userService->getAuthUser();
-
-            return response()->json([
+            return ApiResponse::success([
                 'balance' => $authUser->balance,
-            ]);
-        } catch (\BadMethodCallException $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 401);
+            ], 200);
+        } catch (\Illuminate\Auth\AuthenticationException $e) {
+            return ApiResponse::error('Não autenticado', 401);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao buscar saldo do usuário: ' . $e->getMessage()
-            ], 500);
+            return ApiResponse::error('Erro ao buscar saldo do usuário: ' . $e->getMessage().' ('.get_class($e).')', 500);
         }
     }
 }

@@ -18,6 +18,10 @@ class TransactionControllerSuccessTest extends TestCase
 
         $resp = $this->postJson('/deposit', ['amount' => 25]);
         $resp->assertStatus(200);
+        $resp->assertJson([
+            'success' => true,
+            'code' => 200,
+        ]);
         $user->refresh();
         $this->assertSame('25.00', $user->balance);
     }
@@ -29,6 +33,10 @@ class TransactionControllerSuccessTest extends TestCase
 
         $resp = $this->postJson('/withdraw', ['amount' => 40]);
         $resp->assertStatus(200);
+        $resp->assertJson([
+            'success' => true,
+            'code' => 200,
+        ]);
         $user->refresh();
         $this->assertSame('60.00', $user->balance);
     }
@@ -41,6 +49,10 @@ class TransactionControllerSuccessTest extends TestCase
 
         $resp = $this->postJson('/transfer', ['amount' => 30, 'recipient' => $recipient->email]);
         $resp->assertStatus(200);
+        $resp->assertJson([
+            'success' => true,
+            'code' => 200,
+        ]);
 
         $sender->refresh();
         $recipient->refresh();
@@ -53,15 +65,19 @@ class TransactionControllerSuccessTest extends TestCase
         $user = User::factory()->create(['balance' => 0]);
         Sanctum::actingAs($user, ['*']);
 
-        $this->postJson('/deposit', ['amount' => 25])->assertStatus(200);
-        $this->postJson('/withdraw', ['amount' => 10])->assertStatus(200);
+        $this->postJson('/deposit', ['amount' => 25])->assertStatus(200)->assertJson(['success' => true]);
+        $this->postJson('/withdraw', ['amount' => 10])->assertStatus(200)->assertJson(['success' => true]);
 
         $other = User::factory()->create(['balance' => 0]);
-        $this->postJson('/transfer', ['amount' => 5, 'recipient' => $other->email])->assertStatus(200);
+        $this->postJson('/transfer', ['amount' => 5, 'recipient' => $other->email])->assertStatus(200)->assertJson(['success' => true]);
 
         $resp = $this->getJson('/history');
         $resp->assertStatus(200);
-        $data = $resp->json('transactions');
+        $resp->assertJson([
+            'success' => true,
+            'code' => 200,
+        ]);
+        $data = $resp->json('data.transactions');
         $this->assertIsArray($data);
         $this->assertCount(3, $data);
     }

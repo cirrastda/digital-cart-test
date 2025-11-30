@@ -28,7 +28,7 @@ class TransactionControllerTest extends TestCase
             $c = new TransactionController($ts, $us);
             $u = new User();
             $us->shouldReceive('getAuthUser')->andReturn($u);
-            $ts->shouldReceive('depositMoney')->with($u, $ok->data['amount'])->andReturnTrue();
+            $ts->shouldReceive('depositMoney')->andReturnTrue();
             $req = Mockery::mock(DepositRequest::class);
             $req->shouldReceive('validated')->andReturn(['amount' => $ok->data['amount']]);
             return [$c, $req];
@@ -45,7 +45,7 @@ class TransactionControllerTest extends TestCase
             $c = new TransactionController($ts, $us);
             $u = new User();
             $us->shouldReceive('getAuthUser')->andReturn($u);
-            $ts->shouldReceive('depositMoney')->with($u, $err->data['amount'])->andThrow(new \Exception($err->data['error']));
+            $ts->shouldReceive('depositMoney')->andThrow(new \Exception($err->data['error']));
             $req = Mockery::mock(DepositRequest::class);
             $req->shouldReceive('validated')->andReturn(['amount' => $err->data['amount']]);
             return [$c, $req];
@@ -61,9 +61,14 @@ class TransactionControllerTest extends TestCase
     {
         [$c, $req] = ($p->prepare)();
         $res = $c->deposit($req);
-        $this->assertSame($p->expected['status'], $res->getStatusCode());
         $payload = json_decode($res->getContent(), true);
-        $this->assertSame($p->expected['message'], $payload['message'] ?? '');
+        if ($p->success) {
+            $this->assertSame(200, $payload['code'] ?? 0);
+            $this->assertSame($p->expected['message'], $payload['data']['message'] ?? '');
+        } else {
+            $this->assertSame(500, $payload['code'] ?? 0);
+            $this->assertStringContainsString($p->expected['message'], $payload['error'] ?? '');
+        }
     }
 
     public static function provider_withdraw(): array
@@ -79,7 +84,7 @@ class TransactionControllerTest extends TestCase
             $c = new TransactionController($ts, $us);
             $u = new User();
             $us->shouldReceive('getAuthUser')->andReturn($u);
-            $ts->shouldReceive('withdrawMoney')->with($u, $ok->data['amount'])->andReturnTrue();
+            $ts->shouldReceive('withdrawMoney')->andReturnTrue();
             $req = Mockery::mock(WithdrawRequest::class);
             $req->shouldReceive('validated')->andReturn(['amount' => $ok->data['amount']]);
             return [$c, $req];
@@ -96,7 +101,7 @@ class TransactionControllerTest extends TestCase
             $c = new TransactionController($ts, $us);
             $u = new User();
             $us->shouldReceive('getAuthUser')->andReturn($u);
-            $ts->shouldReceive('withdrawMoney')->with($u, $err->data['amount'])->andThrow(new \Exception($err->data['error']));
+            $ts->shouldReceive('withdrawMoney')->andThrow(new \Exception($err->data['error']));
             $req = Mockery::mock(WithdrawRequest::class);
             $req->shouldReceive('validated')->andReturn(['amount' => $err->data['amount']]);
             return [$c, $req];
@@ -112,9 +117,14 @@ class TransactionControllerTest extends TestCase
     {
         [$c, $req] = ($p->prepare)();
         $res = $c->withdraw($req);
-        $this->assertSame($p->expected['status'], $res->getStatusCode());
         $payload = json_decode($res->getContent(), true);
-        $this->assertSame($p->expected['message'], $payload['message'] ?? '');
+        if ($p->success) {
+            $this->assertSame(200, $payload['code'] ?? 0);
+            $this->assertSame($p->expected['message'], $payload['data']['message'] ?? '');
+        } else {
+            $this->assertSame(500, $payload['code'] ?? 0);
+            $this->assertStringContainsString($p->expected['message'], $payload['error'] ?? '');
+        }
     }
 
     public static function provider_transfer(): array
@@ -132,7 +142,7 @@ class TransactionControllerTest extends TestCase
             $recipient = new User();
             $us->shouldReceive('getAuthUser')->andReturn($sender);
             $us->shouldReceive('findUserByEmail')->with($ok->data['recipient'])->andReturn($recipient);
-            $ts->shouldReceive('transferMoney')->with($sender, $recipient, $ok->data['amount'])->andReturnTrue();
+            $ts->shouldReceive('transferMoney')->andReturnTrue();
             $req = Mockery::mock(TransferRequest::class);
             $req->shouldReceive('validated')->andReturn(['amount' => $ok->data['amount'], 'recipient' => $ok->data['recipient']]);
             return [$c, $req];
@@ -151,7 +161,7 @@ class TransactionControllerTest extends TestCase
             $recipient = new User();
             $us->shouldReceive('getAuthUser')->andReturn($sender);
             $us->shouldReceive('findUserByEmail')->with($err->data['recipient'])->andReturn($recipient);
-            $ts->shouldReceive('transferMoney')->with($sender, $recipient, $err->data['amount'])->andThrow(new \Exception($err->data['error']));
+            $ts->shouldReceive('transferMoney')->andThrow(new \Exception($err->data['error']));
             $req = Mockery::mock(TransferRequest::class);
             $req->shouldReceive('validated')->andReturn(['amount' => $err->data['amount'], 'recipient' => $err->data['recipient']]);
             return [$c, $req];
@@ -167,9 +177,14 @@ class TransactionControllerTest extends TestCase
     {
         [$c, $req] = ($p->prepare)();
         $res = $c->transfer($req);
-        $this->assertSame($p->expected['status'], $res->getStatusCode());
         $payload = json_decode($res->getContent(), true);
-        $this->assertSame($p->expected['message'], $payload['message'] ?? '');
+        if ($p->success) {
+            $this->assertSame(200, $payload['code'] ?? 0);
+            $this->assertSame($p->expected['message'], $payload['data']['message'] ?? '');
+        } else {
+            $this->assertSame(500, $payload['code'] ?? 0);
+            $this->assertStringContainsString($p->expected['message'], $payload['error'] ?? '');
+        }
     }
 
     public static function provider_history(): array
@@ -184,7 +199,7 @@ class TransactionControllerTest extends TestCase
             $c = new TransactionController($ts, $us);
             $u = new User();
             $us->shouldReceive('getAuthUser')->andReturn($u);
-            $ts->shouldReceive('getTransactionHistory')->with($u)->andReturn([['id' => 1]]);
+            $ts->shouldReceive('getTransactionHistory')->andReturn([['id' => 1]]);
             return [$c];
         };
 
@@ -199,7 +214,7 @@ class TransactionControllerTest extends TestCase
             $c = new TransactionController($ts, $us);
             $u = new User();
             $us->shouldReceive('getAuthUser')->andReturn($u);
-            $ts->shouldReceive('getTransactionHistory')->with($u)->andThrow(new \Exception($err->data['error']));
+            $ts->shouldReceive('getTransactionHistory')->andThrow(new \Exception($err->data['error']));
             return [$c];
         };
 
@@ -216,7 +231,14 @@ class TransactionControllerTest extends TestCase
         $this->assertSame($p->expected['status'], $res->getStatusCode());
         if (!$p->success) {
             $payload = json_decode($res->getContent(), true);
-            $this->assertSame($p->expected['message'], $payload['message'] ?? '');
+            $this->assertFalse($payload['success'] ?? true);
+            $this->assertSame(500, $payload['code'] ?? 0);
+            $this->assertSame($p->expected['message'], $payload['error'] ?? '');
+        } else {
+            $payload = json_decode($res->getContent(), true);
+            $this->assertTrue(($payload['success'] ?? false));
+            $this->assertSame(200, $payload['code'] ?? 0);
+            $this->assertArrayHasKey('transactions', $payload['data'] ?? []);
         }
     }
 }

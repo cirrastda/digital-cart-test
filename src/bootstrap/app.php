@@ -16,5 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Padroniza respostas de autenticação em JSON usando nosso envelope
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {
+            return \App\Http\Responses\ApiResponse::error('Não autenticado', 401);
+        });
     })->create();

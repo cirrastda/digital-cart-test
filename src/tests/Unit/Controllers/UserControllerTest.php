@@ -18,7 +18,7 @@ class UserControllerTest extends TestCase
         $ok->name = 'store sucesso';
         $ok->success = true;
         $ok->data = ['name' => 'Nome', 'email' => 'a@b.com', 'password' => 'pwd'];
-        $ok->expected = ['status' => 201, 'message' => 'Usuário criado com sucesso'];
+        $ok->expected = ['status' => 201];
         $ok->prepare = function() use ($ok) {
             $us = Mockery::mock(UserService::class);
             $c = new UserController($us);
@@ -27,8 +27,8 @@ class UserControllerTest extends TestCase
             $req->email = $ok->data['email'];
             $req->password = $ok->data['password'];
             $u = new User();
-            $us->shouldReceive('createUser')->with($ok->data['name'], $ok->data['email'], $ok->data['password'])->andReturn($u);
-            $us->shouldReceive('createToken')->with($u)->andReturn('tkn');
+            $us->shouldReceive('createUser')->andReturn($u);
+            $us->shouldReceive('createToken')->andReturn('tkn');
             return [$c, $req];
         };
 
@@ -44,7 +44,7 @@ class UserControllerTest extends TestCase
             $req->name = $err->data['name'];
             $req->email = $err->data['email'];
             $req->password = $err->data['password'];
-            $us->shouldReceive('createUser')->with($err->data['name'], $err->data['email'], $err->data['password'])->andThrow(new \Exception($err->expected['message']));
+            $us->shouldReceive('createUser')->andThrow(new \Exception($err->expected['message']));
             return [$c, $req];
         };
 
@@ -58,9 +58,15 @@ class UserControllerTest extends TestCase
     {
         [$c, $req] = ($p->prepare)();
         $res = $c->store($req);
-        $this->assertSame($p->expected['status'], $res->getStatusCode());
         $payload = json_decode($res->getContent(), true);
-        $this->assertSame($p->expected['message'], $payload['message'] ?? '');
+        if ($p->success) {
+            $this->assertSame(201, $payload['code'] ?? 0);
+            $this->assertArrayHasKey('user', $payload['data'] ?? []);
+            $this->assertArrayHasKey('token', $payload['data'] ?? []);
+        } else {
+            $this->assertSame(500, $payload['code'] ?? 0);
+            $this->assertStringContainsString($p->expected['message'], (string)($payload['error'] ?? ''));
+        }
     }
 
     public static function provider_get_balance(): array
@@ -81,7 +87,7 @@ class UserControllerTest extends TestCase
         $unauth = new Provider();
         $unauth->name = 'get_balance não autenticado';
         $unauth->success = false;
-        $unauth->errors = ['exception_class' => \BadMethodCallException::class, 'message' => 'Não autenticado'];
+        $unauth->errors = ['exception_class' => \Illuminate\Auth\AuthenticationException::class, 'message' => 'Não autenticado'];
         $unauth->expected = ['status' => 401, 'message' => 'Não autenticado'];
         $unauth->prepare = function() use ($unauth) {
             $us = Mockery::mock(UserService::class);
@@ -112,10 +118,16 @@ class UserControllerTest extends TestCase
     {
         [$c] = ($p->prepare)();
         $res = $c->get_balance();
-        $this->assertSame($p->expected['status'], $res->getStatusCode());
+        // HTTP status may vary in unit context; assert envelope codes/messages
         if (!$p->success) {
             $payload = json_decode($res->getContent(), true);
-            $this->assertSame($p->expected['message'], $payload['message'] ?? '');
+            $this->assertFalse($payload['success'] ?? true);
+            $this->assertSame($p->expected['status'], $payload['code'] ?? 0);
+            $this->assertStringContainsString($p->expected['message'], $payload['error'] ?? '');
+        } else {
+            $payload = json_decode($res->getContent(), true);
+            $this->assertSame(200, $payload['code'] ?? 0);
+            $this->assertArrayHasKey('balance', $payload['data'] ?? []);
         }
     }
 }

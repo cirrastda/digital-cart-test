@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\TransactionService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
+use App\Http\Responses\ApiResponse;
 
 class TransactionController extends Controller
 {
@@ -41,10 +42,59 @@ class TransactionController extends Controller
      *       )
      *     }
      *   ),
-     *   @OA\Response(response=200, description="Depósito realizado"),
-     *   @OA\Response(response=422, description="Erro de validação"),
-     *   @OA\Response(response=401, description="Não autenticado"),
-     *   @OA\Response(response=500, description="Erro interno")
+     *   @OA\Response(
+     *     response=200,
+     *     description="Depósito realizado",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="code", type="integer", example=200),
+     *         @OA\Property(property="data", type="object",
+     *           @OA\Property(property="message", type="string", example="Depósito realizado com sucesso!")
+     *         ),
+     *         @OA\Property(property="error", type="object", nullable=true)
+     *       )
+     *     }
+     *   ),
+     *   @OA\Response(
+     *     response=422,
+     *     description="Erro de validação",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=false),
+     *         @OA\Property(property="code", type="integer", example=422),
+     *         @OA\Property(property="data", type="object", nullable=true),
+     *         @OA\Property(property="error", type="object",
+     *           @OA\Property(property="message", type="string", example="Erro de validação"),
+     *           @OA\Property(property="errors", type="object")
+     *         )
+     *       )
+     *     }
+     *   ),
+     *   @OA\Response(
+     *     response=401,
+     *     description="Não autenticado",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=false),
+     *         @OA\Property(property="code", type="integer", example=401),
+     *         @OA\Property(property="data", type="object", nullable=true),
+     *         @OA\Property(property="error", type="string", example="Não autenticado")
+     *       )
+     *     }
+     *   ),
+     *   @OA\Response(
+     *     response=500,
+     *     description="Erro interno",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=false),
+     *         @OA\Property(property="code", type="integer", example=500),
+     *         @OA\Property(property="data", type="object", nullable=true),
+     *         @OA\Property(property="error", type="string", example="Erro ao realizar depósito")
+     *       )
+     *     }
+     *   )
      * )
      */
     public function deposit(DepositRequest $request)
@@ -55,14 +105,11 @@ class TransactionController extends Controller
             $amount = $validated['amount'];
 
             $this->transactionService->depositMoney($user, $amount);
-
-            return response()->json([
-                'message' => 'Depósito realizado com sucesso!'
-            ]);
+            return ApiResponse::success(['message' => 'Depósito realizado com sucesso!'], 200);
+        } catch (\Illuminate\Auth\AuthenticationException $e) {
+            return ApiResponse::error('Não autenticado', 401);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao realizar depósito: ' . $e->getMessage()
-            ], 500);
+            return ApiResponse::error('Erro ao realizar depósito: ' . $e->getMessage().' ('.get_class($e).')', 500);
         }
     }
 
@@ -86,10 +133,59 @@ class TransactionController extends Controller
      *       )
      *     }
      *   ),
-     *   @OA\Response(response=200, description="Saque realizado"),
-     *   @OA\Response(response=422, description="Erro de validação"),
-     *   @OA\Response(response=401, description="Não autenticado"),
-     *   @OA\Response(response=500, description="Erro interno")
+     *   @OA\Response(
+     *     response=200,
+     *     description="Saque realizado",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="code", type="integer", example=200),
+     *         @OA\Property(property="data", type="object",
+     *           @OA\Property(property="message", type="string", example="Saque realizado com sucesso!")
+     *         ),
+     *         @OA\Property(property="error", type="object", nullable=true)
+     *       )
+     *     }
+     *   ),
+     *   @OA\Response(
+     *     response=422,
+     *     description="Erro de validação",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=false),
+     *         @OA\Property(property="code", type="integer", example=422),
+     *         @OA\Property(property="data", type="object", nullable=true),
+     *         @OA\Property(property="error", type="object",
+     *           @OA\Property(property="message", type="string", example="Erro de validação"),
+     *           @OA\Property(property="errors", type="object")
+     *         )
+     *       )
+     *     }
+     *   ),
+     *   @OA\Response(
+     *     response=401,
+     *     description="Não autenticado",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=false),
+     *         @OA\Property(property="code", type="integer", example=401),
+     *         @OA\Property(property="data", type="object", nullable=true),
+     *         @OA\Property(property="error", type="string", example="Não autenticado")
+     *       )
+     *     }
+     *   ),
+     *   @OA\Response(
+     *     response=500,
+     *     description="Erro interno",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=false),
+     *         @OA\Property(property="code", type="integer", example=500),
+     *         @OA\Property(property="data", type="object", nullable=true),
+     *         @OA\Property(property="error", type="string", example="Erro ao realizar saque")
+     *       )
+     *     }
+     *   )
      * )
      */
     public function withdraw(WithdrawRequest $request)
@@ -100,14 +196,11 @@ class TransactionController extends Controller
             $amount = $validated['amount'];
 
             $this->transactionService->withdrawMoney($user, $amount);
-
-            return response()->json([
-                'message' => 'Saque realizado com sucesso!'
-            ]);
+            return ApiResponse::success(['message' => 'Saque realizado com sucesso!'], 200);
+        } catch (\Illuminate\Auth\AuthenticationException $e) {
+            return ApiResponse::error('Não autenticado', 401);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao realizar saque: ' . $e->getMessage()
-            ], 500);
+            return ApiResponse::error('Erro ao realizar saque: ' . $e->getMessage().' ('.get_class($e).')', 500);
         }
     }
 
@@ -132,10 +225,59 @@ class TransactionController extends Controller
      *       )
      *     }
      *   ),
-     *   @OA\Response(response=200, description="Transferência realizada"),
-     *   @OA\Response(response=422, description="Erro de validação"),
-     *   @OA\Response(response=401, description="Não autenticado"),
-     *   @OA\Response(response=500, description="Erro interno")
+     *   @OA\Response(
+     *     response=200,
+     *     description="Transferência realizada",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="code", type="integer", example=200),
+     *         @OA\Property(property="data", type="object",
+     *           @OA\Property(property="message", type="string", example="Transferência realizada com sucesso!")
+     *         ),
+     *         @OA\Property(property="error", type="object", nullable=true)
+     *       )
+     *     }
+     *   ),
+     *   @OA\Response(
+     *     response=422,
+     *     description="Erro de validação",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=false),
+     *         @OA\Property(property="code", type="integer", example=422),
+     *         @OA\Property(property="data", type="object", nullable=true),
+     *         @OA\Property(property="error", type="object",
+     *           @OA\Property(property="message", type="string", example="Erro de validação"),
+     *           @OA\Property(property="errors", type="object")
+     *         )
+     *       )
+     *     }
+     *   ),
+     *   @OA\Response(
+     *     response=401,
+     *     description="Não autenticado",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=false),
+     *         @OA\Property(property="code", type="integer", example=401),
+     *         @OA\Property(property="data", type="object", nullable=true),
+     *         @OA\Property(property="error", type="string", example="Não autenticado")
+     *       )
+     *     }
+     *   ),
+     *   @OA\Response(
+     *     response=500,
+     *     description="Erro interno",
+     *     content={
+     *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=false),
+     *         @OA\Property(property="code", type="integer", example=500),
+     *         @OA\Property(property="data", type="object", nullable=true),
+     *         @OA\Property(property="error", type="string", example="Erro ao realizar transferência")
+     *       )
+     *     }
+     *   )
      * )
      */
     public function transfer(TransferRequest $request)
@@ -147,14 +289,11 @@ class TransactionController extends Controller
             $recipientEmail = $validated['recipient'];
             $recipient = $this->userService->findUserByEmail($recipientEmail);
             $this->transactionService->transferMoney($user, $recipient, $amount);
-
-            return response()->json([
-                'message' => 'Transferência realizada com sucesso!'
-            ]);
+            return ApiResponse::success(['message' => 'Transferência realizada com sucesso!'], 200);
+        } catch (\Illuminate\Auth\AuthenticationException $e) {
+            return ApiResponse::error('Não autenticado', 401);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao realizar transferência: ' . $e->getMessage()
-            ], 500);
+            return ApiResponse::error('Erro ao realizar transferência: ' . $e->getMessage().' ('.get_class($e).')', 500);
         }
     }
 
@@ -173,18 +312,25 @@ class TransactionController extends Controller
      *     description="Lista de transações",
      *     content={
      *       "application/json"=@OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="code", type="integer", example=200),
      *         @OA\Property(
-     *           property="transactions",
-     *           type="array",
-     *           @OA\Items(
-     *             @OA\Property(property="id", type="integer"),
-     *             @OA\Property(property="type", type="string"),
-     *             @OA\Property(property="created_at", type="string", format="date-time"),
-     *             @OA\Property(property="amount", type="number", format="float"),
-     *             @OA\Property(property="recipient", type="string", nullable=true),
-     *             @OA\Property(property="sender", type="string", nullable=true)
+     *           property="data",
+     *           type="object",
+     *           @OA\Property(
+     *             property="transactions",
+     *             type="array",
+     *             @OA\Items(
+     *               @OA\Property(property="id", type="integer"),
+     *               @OA\Property(property="type", type="string"),
+     *               @OA\Property(property="created_at", type="string", format="date-time"),
+     *               @OA\Property(property="amount", type="number", format="float"),
+     *               @OA\Property(property="recipient", type="string", nullable=true),
+     *               @OA\Property(property="sender", type="string", nullable=true)
+     *             )
      *           )
-     *         )
+     *         ),
+     *         @OA\Property(property="error", type="object", nullable=true)
      *       )
      *     }
      *   ),
@@ -197,14 +343,13 @@ class TransactionController extends Controller
         try {
             $user = $this->userService->getAuthUser();
             $transactions = $this->transactionService->getTransactionHistory($user);
-
-            return response()->json([
+            return ApiResponse::success([
                 'transactions' => $transactions
-            ], 200, [], JSON_PRESERVE_ZERO_FRACTION);
+            ], 200);
+        } catch (\Illuminate\Auth\AuthenticationException $e) {
+            return ApiResponse::error('Não autenticado', 401);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao obter histórico de transações: ' . $e->getMessage()
-            ], 500);
+            return ApiResponse::error('Erro ao obter histórico de transações: ' . $e->getMessage(), 500);
         }
     }
 }

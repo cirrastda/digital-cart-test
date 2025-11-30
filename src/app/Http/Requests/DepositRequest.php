@@ -1,13 +1,11 @@
 <?php
 
 namespace App\Http\Requests;
-
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 use App\Models\Transaction;
 use App\Services\TransactionService;
 
-class DepositRequest extends FormRequest
+class DepositRequest extends BaseApiRequest
 {
     public function authorize(): bool
     {
