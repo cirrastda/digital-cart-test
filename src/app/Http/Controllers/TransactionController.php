@@ -96,7 +96,7 @@ class TransactionController extends Controller
 
             return response()->json([
                 'transactions' => $transactions
-            ]);
+            ], 200, [], JSON_PRESERVE_ZERO_FRACTION);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Erro ao obter histórico de transações: ' . $e->getMessage()

@@ -236,19 +236,31 @@ class TransactionServiceTest extends TestCase
         $ok = new Provider();
         $ok->name = 'history sucesso';
         $ok->success = true;
+        $now = now();
         $ok->expected = [
-            ['id' => 1, 'amount' => 10.0, 'type' => 'deposit'],
-            ['id' => 2, 'amount' => 5.0, 'type' => 'withdraw'],
+            ['id' => 1, 'type' => 'deposit', 'created_at' => $now, 'amount' => 10.0],
+            ['id' => 2, 'type' => 'withdraw', 'created_at' => $now, 'amount' => 5.0],
         ];
-        $ok->prepare = function() use ($ok) {
-            $query = Mockery::mock();
-            $query->shouldReceive('with')->andReturnSelf();
-            $item1 = new class { public function toList() { return ['id' => 1, 'amount' => 10.0, 'type' => 'deposit']; } };
-            $item2 = new class { public function toList() { return ['id' => 2, 'amount' => 5.0, 'type' => 'withdraw']; } };
-            $collection = new Collection([$item1, $item2]);
-            $query->shouldReceive('get')->andReturn($collection);
+        $ok->prepare = function() use ($ok, $now) {
+            $builder = Mockery::mock();
+            $rows = new Collection([
+                (object) ['id' => 1, 'type' => 'deposit', 'created_at' => $now, 'amount' => 10.0, 'recipient' => null, 'sender' => null],
+                (object) ['id' => 2, 'type' => 'withdraw', 'created_at' => $now, 'amount' => 5.0, 'recipient' => null, 'sender' => null],
+            ]);
+            $builder->shouldReceive('fromSub')->andReturnSelf();
+            $builder->shouldReceive('orderBy')->andReturnSelf();
+            $builder->shouldReceive('get')->andReturn($rows);
+            DB::shouldReceive('query')->andReturn($builder);
+
+            $qbDummy = Mockery::mock();
+            $qbDummy->shouldReceive('join')->andReturnSelf();
+            $qbDummy->shouldReceive('where')->andReturnSelf();
+            $qbDummy->shouldReceive('selectRaw')->andReturnSelf();
+            $qbDummy->shouldReceive('unionAll')->andReturnSelf();
+            DB::shouldReceive('table')->andReturn($qbDummy);
+
             $user = Mockery::mock(User::class)->makePartial();
-            $user->shouldReceive('transactions')->andReturn($query);
+            $user->id = 1;
             return $user;
         };
 
@@ -257,10 +269,21 @@ class TransactionServiceTest extends TestCase
         $err->success = false;
         $err->errors = ['exception_class' => \Exception::class, 'message' => 'Falha ao consultar'];
         $err->prepare = function() use ($err) {
-            $query = Mockery::mock();
-            $query->shouldReceive('with')->andThrow(new \Exception('Falha ao consultar'));
+            $builder = Mockery::mock();
+            $builder->shouldReceive('fromSub')->andReturnSelf();
+            $builder->shouldReceive('orderBy')->andReturnSelf();
+            $builder->shouldReceive('get')->andThrow(new \Exception('Falha ao consultar'));
+            DB::shouldReceive('query')->andReturn($builder);
+
+            $qbDummy = Mockery::mock();
+            $qbDummy->shouldReceive('join')->andReturnSelf();
+            $qbDummy->shouldReceive('where')->andReturnSelf();
+            $qbDummy->shouldReceive('selectRaw')->andReturnSelf();
+            $qbDummy->shouldReceive('unionAll')->andReturnSelf();
+            DB::shouldReceive('table')->andReturn($qbDummy);
+
             $user = Mockery::mock(User::class)->makePartial();
-            $user->shouldReceive('transactions')->andReturn($query);
+            $user->id = 1;
             return $user;
         };
 

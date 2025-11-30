@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Transaction;
+use App\Models\Transfer;
+use App\Services\TransactionHistoryFormatter;
 
 class TransactionService
 {
@@ -118,6 +120,40 @@ class TransactionService
 
     public function getTransactionHistory(User $user)
     {
-        return $user->transactions()->with(['deposits', 'withdraws', 'transfers'])->get()->map->toList();
+        $userId = $user->id;
+
+        $deposits = DB::table('transactions as t')
+            ->join('deposits as d', 'd.transaction_id', '=', 't.id')
+            ->where('t.user_id', $userId)
+            ->selectRaw("t.id as id, t.type as type, t.created_at as created_at, d.amount as amount, NULL as recipient, NULL as sender");
+
+        $withdraws = DB::table('transactions as t')
+            ->join('withdraws as w', 'w.transaction_id', '=', 't.id')
+            ->where('t.user_id', $userId)
+            ->selectRaw("t.id as id, t.type as type, t.created_at as created_at, w.amount as amount, NULL as recipient, NULL as sender");
+
+        $transfersSent = DB::table('transactions as t')
+            ->join('transfers as tr', 'tr.transaction_id', '=', 't.id')
+            ->join('users as u_rec', 'u_rec.id', '=', 'tr.recipient_user_id')
+            ->where('t.user_id', $userId)
+            ->selectRaw("t.id as id, t.type as type, t.created_at as created_at, tr.amount as amount, u_rec.name as recipient, NULL as sender");
+
+        $transfersReceived = DB::table('transactions as t')
+            ->join('transfers as tr', 'tr.transaction_id', '=', 't.id')
+            ->join('users as u_send', 'u_send.id', '=', 't.user_id')
+            ->where('tr.recipient_user_id', $userId)
+            ->selectRaw("t.id as id, 'transfer-received' as type, t.created_at as created_at, ABS(tr.amount) as amount, NULL as recipient, u_send.name as sender");
+
+        $union = $deposits
+            ->unionAll($withdraws)
+            ->unionAll($transfersSent)
+            ->unionAll($transfersReceived);
+
+        $rows = DB::query()
+            ->fromSub($union, 'history')
+            ->orderBy('created_at')
+            ->get();
+
+        return TransactionHistoryFormatter::format($rows);
     }
 }
