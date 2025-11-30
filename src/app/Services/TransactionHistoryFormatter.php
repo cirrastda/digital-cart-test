@@ -6,6 +6,12 @@ use Illuminate\Support\Collection;
 
 class TransactionHistoryFormatter
 {
+    /**
+     * Formata linhas do histórico de transações.
+     *
+     * @param Collection $rows
+     * @return Collection
+     */
     public static function format(Collection $rows): Collection
     {
         return $rows->map(function ($row) {

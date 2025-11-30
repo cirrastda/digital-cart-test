@@ -20,7 +20,7 @@ class UserService
     }
 
     /**
-     * Create a new user.
+     * Cria um novo usuário
      *
      * @param string $nome
      * @param string $email
@@ -56,7 +56,7 @@ class UserService
     }
 
     /**
-     * Check if user exists by email.
+     * Verifica se existe um usuário por e-mail
      *
      * @param string $email
      * @return bool
@@ -67,7 +67,7 @@ class UserService
     }
 
     /**
-     * Create a new personal access token for the user.
+     * Cria um novo token de acesso personalizado para o usuário.
      *
      * @param User $user
      * @return string
@@ -89,7 +89,7 @@ class UserService
     }
 
     /**
-     * Get the authenticated user.
+     * Obtém o usuário autenticado.
      *
      * @return User
      * @throws AuthenticationException
@@ -104,7 +104,7 @@ class UserService
     }
 
     /**
-     * Find a user by ID.
+     * Encontra um usuário por ID.
      *
      * @param int $id
      * @return User
@@ -120,7 +120,7 @@ class UserService
     }
 
     /**
-     * Find a user by email.
+     * Encontra um usuário por e-mail.
      *
      * @param string $email
      * @return User

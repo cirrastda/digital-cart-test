@@ -11,6 +11,14 @@ use App\Services\TransactionHistoryFormatter;
 
 class TransactionService
 {
+    /**
+     * Realiza depósito na conta do usuário.
+     *
+     * @param User $user Usuário autenticado
+     * @param float $amount Valor a depositar
+     * @return bool
+     * @throws \Throwable
+     */
     public function depositMoney(User $user, float $amount)
     {
         DB::beginTransaction();
@@ -34,6 +42,14 @@ class TransactionService
             throw $te;
         }
     }
+    /**
+     * Realiza saque da conta do usuário.
+     *
+     * @param User $user Usuário autenticado
+     * @param float $amount Valor a sacar
+     * @return bool
+     * @throws \Throwable
+     */
     public function withdrawMoney(User $user, float $amount)
     {
         DB::beginTransaction();
@@ -58,6 +74,15 @@ class TransactionService
         }
     }
 
+    /**
+     * Transfere valor do remetente para o destinatário.
+     *
+     * @param User $sender Usuário remetente
+     * @param User $receiver Usuário destinatário
+     * @param float $amount Valor a transferir
+     * @return bool
+     * @throws \Throwable
+     */
     public function transferMoney(User $sender, User $receiver, float $amount)
     {
         DB::beginTransaction();
@@ -84,6 +109,13 @@ class TransactionService
             throw $te;
         }
     }
+    /**
+     * Verifica se o depósito excede o limite diário.
+     *
+     * @param User $user
+     * @param float $amount
+     * @return bool
+     */
     public function depositExceedsDailyLimit(User $user, float $amount): bool
     {
         $depositLimit = Transaction::DEPOSIT_LIMIT;
@@ -94,6 +126,13 @@ class TransactionService
         return false;
     }
 
+    /**
+     * Verifica se o saque excede o limite diário.
+     *
+     * @param User $user
+     * @param float $amount
+     * @return bool
+     */
     public function withdrawExceedsDailyLimit(User $user, float $amount): bool
     {
         $withdrawLimit = Transaction::WITHDRAW_LIMIT;
@@ -104,6 +143,12 @@ class TransactionService
         return false;
     }
 
+    /**
+     * Soma o total sacado no dia corrente.
+     *
+     * @param User $user
+     * @return float|int
+     */
     public function getCurrentDayWithdrawAmount(User $user)
     {
         return $user->withdraws()
@@ -111,6 +156,12 @@ class TransactionService
             ->sum('amount');
     }
 
+    /**
+     * Soma o total depositado no dia corrente.
+     *
+     * @param User $user
+     * @return float|int
+     */
     public function getCurrentDayDepositAmount(User $user)
     {
         return $user->deposits()
@@ -118,6 +169,15 @@ class TransactionService
             ->sum('amount');
     }
 
+    /**
+     * Obtém o histórico de transações do usuário.
+     *
+     * Retorna coleção formatada com id, tipo, data, valor
+     * e, quando aplicável, remetente/destinatário.
+     *
+     * @param User $user
+     * @return \Illuminate\Support\Collection
+     */
     public function getTransactionHistory(User $user)
     {
         $userId = $user->id;

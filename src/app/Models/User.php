@@ -43,10 +43,10 @@ class User extends Authenticatable
         return $this->hasManyThrough(
             Deposit::class,
             Transaction::class,
-            'user_id', // FK on transactions referencing users
-            'transaction_id', // FK on deposits referencing transactions
-            'id', // users.id
-            'id' // transactions.id
+            'user_id',
+            'transaction_id',
+            'id',
+            'id'
         );
     }
 
