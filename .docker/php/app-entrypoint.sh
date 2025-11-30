@@ -8,6 +8,23 @@ log() {
 mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache 2>/dev/null || true
 chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache 2>/dev/null || true
 
+if [ ! -f "/var/www/html/.env" ] && [ -f "/var/www/html/.env.example" ]; then
+  log "Creating .env from .env.example"
+  cp /var/www/html/.env.example /var/www/html/.env
+fi
+
+if [ -f "/var/www/html/.env" ]; then
+  CURRENT_APP_KEY=$(grep -E '^APP_KEY=' /var/www/html/.env | cut -d= -f2-)
+  if [ -z "$CURRENT_APP_KEY" ]; then
+    if [ -f "/var/www/html/vendor/autoload.php" ]; then
+      log "Generating APP_KEY via artisan"
+      php /var/www/html/artisan key:generate --force --no-interaction || log "Failed to generate APP_KEY"
+    else
+      log "Skipping APP_KEY generation: vendor not installed"
+    fi
+  fi
+fi
+
 DB_CONN="sqlite"
 
 if [ ! -f "/var/www/html/database/database.sqlite" ]; then
