@@ -4,6 +4,10 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
+use App\Models\Transaction;
+use App\Services\TransactionService;
+
+
 
 class WithdrawRequest extends FormRequest
 {
@@ -27,6 +31,11 @@ class WithdrawRequest extends FormRequest
 
             if ($user && $amount > (float) $user->balance) {
                 $v->errors()->add('amount', 'Saldo insuficiente para saque.');
+            }
+
+            $transactionService = app(TransactionService::class);
+            if ($transactionService->withdrawExceedsDailyLimit($user, $amount)) {
+                $v->errors()->add('amount', 'Limite diário de saque excedido.');
             }
         });
     }

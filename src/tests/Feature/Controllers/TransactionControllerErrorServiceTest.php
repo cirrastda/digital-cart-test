@@ -18,6 +18,8 @@ class TransactionControllerErrorServiceTest extends TestCase
         Sanctum::actingAs($user, ['*']);
 
         $mock = $this->mock(TransactionService::class);
+        // Ensure validation passes by not triggering daily limit during mock
+        $mock->shouldReceive('depositExceedsDailyLimit')->andReturn(false);
         $mock->shouldReceive('depositMoney')->andThrow(new \Exception('Falha no serviço'));
 
         $resp = $this->postJson('/deposit', ['amount' => 25]);
@@ -31,6 +33,8 @@ class TransactionControllerErrorServiceTest extends TestCase
         Sanctum::actingAs($user, ['*']);
 
         $mock = $this->mock(TransactionService::class);
+        // Ensure validation passes by not triggering daily limit during mock
+        $mock->shouldReceive('withdrawExceedsDailyLimit')->andReturn(false);
         $mock->shouldReceive('withdrawMoney')->andThrow(new \Exception('Falha no serviço'));
 
         $resp = $this->postJson('/withdraw', ['amount' => 40]);

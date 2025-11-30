@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Services\TransactionService;
 use App\Models\User;
+use App\Models\Transaction;
 use Tests\Provider;
 
 class TransactionServiceTest extends TestCase
@@ -283,5 +284,199 @@ class TransactionServiceTest extends TestCase
             $this->assertInstanceOf($p->errors['exception_class'], $te);
             $this->assertSame($p->errors['message'], $te->getMessage());
         }
+    }
+
+    public static function provider_deposit_exceeds_daily_limit(): array
+    {
+        $under = new Provider();
+        $under->name = 'depositExceedsDailyLimit false quando dentro do limite';
+        $under->success = true;
+        $under->data = ['current' => 200.0, 'amount' => 100.0];
+        $under->expected = ['result' => false];
+        $under->prepare = function() use ($under) {
+            $service = \Mockery::mock(TransactionService::class)->makePartial();
+            $user = \Mockery::mock(User::class)->makePartial();
+            $service->shouldReceive('getCurrentDayDepositAmount')->with($user)->andReturn($under->data['current']);
+            return [$service, $user];
+        };
+
+        $overAmount = new Provider();
+        $overAmount->name = 'depositExceedsDailyLimit true quando valor excede limite';
+        $overAmount->success = true;
+        $overAmount->data = ['current' => 0.0, 'amount' => Transaction::DEPOSIT_LIMIT + 1];
+        $overAmount->expected = ['result' => true];
+        $overAmount->prepare = function() use ($overAmount) {
+            $service = \Mockery::mock(TransactionService::class)->makePartial();
+            $user = \Mockery::mock(User::class)->makePartial();
+            $service->shouldReceive('getCurrentDayDepositAmount')->with($user)->andReturn($overAmount->data['current']);
+            return [$service, $user];
+        };
+
+        $overSum = new Provider();
+        $overSum->name = 'depositExceedsDailyLimit true quando soma excede limite';
+        $overSum->success = true;
+        $overSum->data = ['current' => Transaction::DEPOSIT_LIMIT - 100.0, 'amount' => 200.0];
+        $overSum->expected = ['result' => true];
+        $overSum->prepare = function() use ($overSum) {
+            $service = \Mockery::mock(TransactionService::class)->makePartial();
+            $user = \Mockery::mock(User::class)->makePartial();
+            $service->shouldReceive('getCurrentDayDepositAmount')->with($user)->andReturn($overSum->data['current']);
+            return [$service, $user];
+        };
+
+        return [[$under], [$overAmount], [$overSum]];
+    }
+
+    /**
+     * @dataProvider provider_deposit_exceeds_daily_limit
+     */
+    public function test_deposit_exceeds_daily_limit(Provider $p): void
+    {
+        [$service, $user] = ($p->prepare)();
+        $result = $service->depositExceedsDailyLimit($user, $p->data['amount']);
+        $this->assertTrue($p->success);
+        $this->assertSame($p->expected['result'], $result);
+    }
+
+    public static function provider_withdraw_exceeds_daily_limit(): array
+    {
+        $under = new Provider();
+        $under->name = 'withdrawExceedsDailyLimit false quando dentro do limite';
+        $under->success = true;
+        $under->data = ['current' => 200.0, 'amount' => 100.0];
+        $under->expected = ['result' => false];
+        $under->prepare = function() use ($under) {
+            $service = \Mockery::mock(TransactionService::class)->makePartial();
+            $user = \Mockery::mock(User::class)->makePartial();
+            $service->shouldReceive('getCurrentDayWithdrawAmount')->with($user)->andReturn($under->data['current']);
+            return [$service, $user];
+        };
+
+        $overAmount = new Provider();
+        $overAmount->name = 'withdrawExceedsDailyLimit true quando valor excede limite';
+        $overAmount->success = true;
+        $overAmount->data = ['current' => 0.0, 'amount' => Transaction::WITHDRAW_LIMIT + 1];
+        $overAmount->expected = ['result' => true];
+        $overAmount->prepare = function() use ($overAmount) {
+            $service = \Mockery::mock(TransactionService::class)->makePartial();
+            $user = \Mockery::mock(User::class)->makePartial();
+            $service->shouldReceive('getCurrentDayWithdrawAmount')->with($user)->andReturn($overAmount->data['current']);
+            return [$service, $user];
+        };
+
+        $overSum = new Provider();
+        $overSum->name = 'withdrawExceedsDailyLimit true quando soma excede limite';
+        $overSum->success = true;
+        $overSum->data = ['current' => Transaction::WITHDRAW_LIMIT - 100.0, 'amount' => 200.0];
+        $overSum->expected = ['result' => true];
+        $overSum->prepare = function() use ($overSum) {
+            $service = \Mockery::mock(TransactionService::class)->makePartial();
+            $user = \Mockery::mock(User::class)->makePartial();
+            $service->shouldReceive('getCurrentDayWithdrawAmount')->with($user)->andReturn($overSum->data['current']);
+            return [$service, $user];
+        };
+
+        return [[$under], [$overAmount], [$overSum]];
+    }
+
+    /**
+     * @dataProvider provider_withdraw_exceeds_daily_limit
+     */
+    public function test_withdraw_exceeds_daily_limit(Provider $p): void
+    {
+        [$service, $user] = ($p->prepare)();
+        $result = $service->withdrawExceedsDailyLimit($user, $p->data['amount']);
+        $this->assertTrue($p->success);
+        $this->assertSame($p->expected['result'], $result);
+    }
+
+    public static function provider_get_current_day_deposit_amount(): array
+    {
+        $zero = new Provider();
+        $zero->name = 'getCurrentDayDepositAmount retorna 0';
+        $zero->success = true;
+        $zero->expected = ['result' => 0.0];
+        $zero->prepare = function() use ($zero) {
+            $date = now()->toDateString();
+            $query = \Mockery::mock();
+            $query->shouldReceive('whereDate')->with('deposits.created_at', $date)->andReturnSelf();
+            $query->shouldReceive('sum')->with('amount')->andReturn(0.0);
+            $user = \Mockery::mock(User::class)->makePartial();
+            $user->shouldReceive('deposits')->andReturn($query);
+            return $user;
+        };
+
+        $some = new Provider();
+        $some->name = 'getCurrentDayDepositAmount retorna soma positiva';
+        $some->success = true;
+        $some->expected = ['result' => 150.0];
+        $some->prepare = function() use ($some) {
+            $date = now()->toDateString();
+            $query = \Mockery::mock();
+            $query->shouldReceive('whereDate')->with('deposits.created_at', $date)->andReturnSelf();
+            $query->shouldReceive('sum')->with('amount')->andReturn(150.0);
+            $user = \Mockery::mock(User::class)->makePartial();
+            $user->shouldReceive('deposits')->andReturn($query);
+            return $user;
+        };
+
+        return [[$zero], [$some]];
+    }
+
+    /**
+     * @dataProvider provider_get_current_day_deposit_amount
+     */
+    public function test_get_current_day_deposit_amount(Provider $p): void
+    {
+        $user = ($p->prepare)();
+        $service = new TransactionService();
+        $result = $service->getCurrentDayDepositAmount($user);
+        $this->assertTrue($p->success);
+        $this->assertSame($p->expected['result'], $result);
+    }
+
+    public static function provider_get_current_day_withdraw_amount(): array
+    {
+        $zero = new Provider();
+        $zero->name = 'getCurrentDayWithdrawAmount retorna 0';
+        $zero->success = true;
+        $zero->expected = ['result' => 0.0];
+        $zero->prepare = function() use ($zero) {
+            $date = now()->toDateString();
+            $query = \Mockery::mock();
+            $query->shouldReceive('whereDate')->with('withdraws.created_at', $date)->andReturnSelf();
+            $query->shouldReceive('sum')->with('amount')->andReturn(0.0);
+            $user = \Mockery::mock(User::class)->makePartial();
+            $user->shouldReceive('withdraws')->andReturn($query);
+            return $user;
+        };
+
+        $some = new Provider();
+        $some->name = 'getCurrentDayWithdrawAmount retorna soma positiva';
+        $some->success = true;
+        $some->expected = ['result' => 75.0];
+        $some->prepare = function() use ($some) {
+            $date = now()->toDateString();
+            $query = \Mockery::mock();
+            $query->shouldReceive('whereDate')->with('withdraws.created_at', $date)->andReturnSelf();
+            $query->shouldReceive('sum')->with('amount')->andReturn(75.0);
+            $user = \Mockery::mock(User::class)->makePartial();
+            $user->shouldReceive('withdraws')->andReturn($query);
+            return $user;
+        };
+
+        return [[$zero], [$some]];
+    }
+
+    /**
+     * @dataProvider provider_get_current_day_withdraw_amount
+     */
+    public function test_get_current_day_withdraw_amount(Provider $p): void
+    {
+        $user = ($p->prepare)();
+        $service = new TransactionService();
+        $result = $service->getCurrentDayWithdrawAmount($user);
+        $this->assertTrue($p->success);
+        $this->assertSame($p->expected['result'], $result);
     }
 }

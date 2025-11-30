@@ -38,4 +38,40 @@ class User extends Authenticatable
         return $this->hasMany(Transaction::class);
     }
 
+    public function deposits()
+    {
+        return $this->hasManyThrough(
+            Deposit::class,
+            Transaction::class,
+            'user_id', // FK on transactions referencing users
+            'transaction_id', // FK on deposits referencing transactions
+            'id', // users.id
+            'id' // transactions.id
+        );
+    }
+
+    public function withdraws()
+    {
+        return $this->hasManyThrough(
+            Withdraw::class,
+            Transaction::class,
+            'user_id',
+            'transaction_id',
+            'id',
+            'id'
+        );
+    }
+
+    public function transfers()
+    {
+        return $this->hasManyThrough(
+            Transfer::class,
+            Transaction::class,
+            'user_id',
+            'transaction_id',
+            'id',
+            'id'
+        );
+    }
+
 }

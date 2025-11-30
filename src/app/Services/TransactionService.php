@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Transaction;
 
 class TransactionService
 {
@@ -80,6 +81,39 @@ class TransactionService
             DB::rollBack();
             throw $te;
         }
+    }
+    public function depositExceedsDailyLimit(User $user, float $amount): bool
+    {
+        $depositLimit = Transaction::DEPOSIT_LIMIT;
+        $currentDayDepositAmount = $this->getCurrentDayDepositAmount($user);
+        if ($amount > $depositLimit || $amount + $currentDayDepositAmount > $depositLimit) {
+            return true;
+        }
+        return false;
+    }
+
+    public function withdrawExceedsDailyLimit(User $user, float $amount): bool
+    {
+        $withdrawLimit = Transaction::WITHDRAW_LIMIT;
+        $currentDayWithdrawAmount = $this->getCurrentDayWithdrawAmount($user);
+        if ($amount > $withdrawLimit || $amount + $currentDayWithdrawAmount > $withdrawLimit) {
+            return true;
+        }
+        return false;
+    }
+
+    public function getCurrentDayWithdrawAmount(User $user)
+    {
+        return $user->withdraws()
+            ->whereDate('withdraws.created_at', now()->toDateString())
+            ->sum('amount');
+    }
+
+    public function getCurrentDayDepositAmount(User $user)
+    {
+        return $user->deposits()
+            ->whereDate('deposits.created_at', now()->toDateString())
+            ->sum('amount');
     }
 
     public function getTransactionHistory(User $user)

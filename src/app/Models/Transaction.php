@@ -10,6 +10,9 @@ class Transaction extends Model
 {
     use HasFactory;
 
+    public const WITHDRAW_LIMIT = 1000.00;
+    public const DEPOSIT_LIMIT = 1000.00;
+
     protected $fillable = [
         'user_id',
         'type',

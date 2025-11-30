@@ -3,6 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
+use App\Models\Transaction;
+use App\Services\TransactionService;
 
 class DepositRequest extends FormRequest
 {
@@ -16,6 +19,19 @@ class DepositRequest extends FormRequest
         return [
             'amount' => ['required', 'numeric', 'min:0.01'],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function (Validator $v) {
+            $user = $this->user();
+            $amount = (float) $this->input('amount');
+            $transactionService = app(TransactionService::class);
+            if ($transactionService->depositExceedsDailyLimit($user, $amount)) {
+                $v->errors()->add('amount', 'Limite diário de depósito excedido.');
+            }
+
+        });
     }
 
     public function messages(): array

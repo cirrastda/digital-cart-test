@@ -18,6 +18,7 @@ class UserService
     {
         return new User();
     }
+
     /**
      * Create a new user.
      *
