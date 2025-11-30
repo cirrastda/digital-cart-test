@@ -1,0 +1,202 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Digital Cart API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/",
+      "description": "Ambiente local"
+    }
+  ],
+  "tags": [
+    { "name": "Usuários" },
+    { "name": "Transações" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sanctum": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Token"
+      }
+    }
+  },
+  "security": [
+    { "sanctum": [] }
+  ],
+  "paths": {
+    "/users": {
+      "post": {
+        "tags": ["Usuários"],
+        "summary": "Criar usuário",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário criado"
+          },
+          "422": {
+            "description": "Erro de validação"
+          },
+          "500": {
+            "description": "Erro interno"
+          }
+        }
+      }
+    },
+    "/users/balance": {
+      "get": {
+        "tags": ["Usuários"],
+        "summary": "Consultar saldo",
+        "responses": {
+          "200": {
+            "description": "Saldo atual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "balance": { "type": "number", "format": "float" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Não autenticado" },
+          "500": { "description": "Erro interno" }
+        }
+      }
+    },
+    "/deposit": {
+      "post": {
+        "tags": ["Transações"],
+        "summary": "Depositar",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["amount"],
+                "properties": {
+                  "amount": { "type": "number", "format": "float", "minimum": 0.01 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Depósito realizado" },
+          "422": { "description": "Erro de validação" },
+          "401": { "description": "Não autenticado" },
+          "500": { "description": "Erro interno" }
+        }
+      }
+    },
+    "/withdraw": {
+      "post": {
+        "tags": ["Transações"],
+        "summary": "Sacar",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["amount"],
+                "properties": {
+                  "amount": { "type": "number", "format": "float", "minimum": 0.01 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Saque realizado" },
+          "422": { "description": "Erro de validação" },
+          "401": { "description": "Não autenticado" },
+          "500": { "description": "Erro interno" }
+        }
+      }
+    },
+    "/transfer": {
+      "post": {
+        "tags": ["Transações"],
+        "summary": "Transferir",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["amount", "recipient"],
+                "properties": {
+                  "amount": { "type": "number", "format": "float", "minimum": 0.01 },
+                  "recipient": { "type": "string", "format": "email" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Transferência realizada" },
+          "422": { "description": "Erro de validação" },
+          "401": { "description": "Não autenticado" },
+          "500": { "description": "Erro interno" }
+        }
+      }
+    },
+    "/history": {
+      "get": {
+        "tags": ["Transações"],
+        "summary": "Histórico de transações",
+        "responses": {
+          "200": {
+            "description": "Lista de transações",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer" },
+                          "type": { "type": "string" },
+                          "created_at": { "type": "string", "format": "date-time" },
+                          "amount": { "type": "number", "format": "float" },
+                          "recipient": { "type": "string", "nullable": true },
+                          "sender": { "type": "string", "nullable": true }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Não autenticado" },
+          "500": { "description": "Erro interno" }
+        }
+      }
+    }
+  }
+}
