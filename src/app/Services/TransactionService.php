@@ -12,12 +12,10 @@ class TransactionService
     {
         DB::beginTransaction();
         try {
-            // Cria uma transação registrada para o usuário
+
             $transaction = $user->transactions()->create([
                 'type' => 'deposit',
             ]);
-
-            $deposit =
 
             $deposit = $transaction->deposits()->create([
                 'amount' => $amount,

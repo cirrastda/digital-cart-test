@@ -9,6 +9,15 @@ use Illuminate\Support\Facades\DB;
 
 class UserService
 {
+    protected function userQuery()
+    {
+        return User::query();
+    }
+
+    protected function newUser(): User
+    {
+        return new User();
+    }
     /**
      * Create a new user.
      *
@@ -26,7 +35,7 @@ class UserService
                 throw new \Exception('Usuário já existe com este email.');
             }
 
-            $user = new User();
+            $user = $this->newUser();
             $user->name = $nome;
             $user->email = $email;
             $user->password = Hash::make($password);
@@ -53,7 +62,7 @@ class UserService
      */
     public function userExistsByEmail(string $email): bool
     {
-        return User::where('email', $email)->exists();
+        return $this->userQuery()->where('email', $email)->exists();
     }
 
     /**
@@ -65,11 +74,10 @@ class UserService
     public function createToken(User $user): string
     {
         try {
-            $freshUser = \App\Models\User::where('email', $user->email)->first();
-            if ($freshUser && $freshUser->getKey()) {
-                $token = $freshUser->createToken('api')->plainTextToken;
-                $freshUser->token = $token;
-                $freshUser->save();
+            if ($user && $user->getKey()) {
+                $token = $user->createToken('api')->plainTextToken;
+                $user->token = $token;
+                $user->save();
             } else {
                 throw new \Exception('Usuário recém-criado não possui ID carregado para Sanctum.');
             }
@@ -103,7 +111,7 @@ class UserService
      */
     public function findUserById(int $id): User
     {
-        $user = User::find($id);
+        $user = $this->userQuery()->find($id);
         if (!$user) {
             throw new \Exception('Usuário não encontrado.');
         }
@@ -119,7 +127,7 @@ class UserService
      */
     public function findUserByEmail(string $email): User
     {
-        $user = User::where('email', $email)->first();
+        $user = $this->userQuery()->where('email', $email)->first();
         if (!$user) {
             throw new \Exception('Usuário não encontrado.');
         }

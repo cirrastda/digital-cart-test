@@ -39,7 +39,7 @@ class TransactionController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Erro ao realizar depósito: ' . $e->getMessage()
-            ], 400);
+            ], 500);
         }
     }
 
@@ -61,7 +61,7 @@ class TransactionController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Erro ao realizar saque: ' . $e->getMessage()
-            ], 400);
+            ], 500);
         }
     }
 
@@ -84,7 +84,7 @@ class TransactionController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Erro ao realizar transferência: ' . $e->getMessage()
-            ], 400);
+            ], 500);
         }
     }
 
@@ -100,7 +100,7 @@ class TransactionController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Erro ao obter histórico de transações: ' . $e->getMessage()
-            ], 400);
+            ], 500);
         }
     }
 }
